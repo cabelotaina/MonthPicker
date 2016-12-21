@@ -77,6 +77,42 @@
 .mp-next:before { content: ">"; }
 
 
+.mp-prev-month, .mp-next-month {
+  position: absolute;
+  width: 50px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.mp-prev-month { left: 0; }
+.mp-next-month { right: 0; }
+
+.mp-prev-month.mp-disabled, .mp-next-month.mp-disabled {
+  color: #999;
+  cursor: default;
+}
+
+.mp-prev-month:not(.mp-disabled):hover, .mp-next-month:not(.mp-disabled):hover {
+  background-color: #bf7f30;
+  color: #fff;
+}
+
+.mp-prev-month:before, .mp-next-month:before {
+  display: inline-block;
+  width: 50px;
+  text-align: center;
+}
+
+/*
+.mp-prevMonth:before { content: "<"; }
+.mp-nextMonth:before { content: ">"; }
+
+.mp-prevYear:before { content: "<<"; letter-spacing: -.25rem; }
+.mp-nextYear:before { content: ">>"; letter-spacing: -.25rem; }
+*/
+.mp-prev-month:before { content: "<"; }
+.mp-next-month:before { content: ">"; }
+
 
 /* Calendar */
 .mp-calendar {

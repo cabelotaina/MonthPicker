@@ -15,7 +15,7 @@ $.widget("nlte.monthPicker", {
     var self = this;
     var $header, $calendar;
     this.$month = $("<table class='mp-month'><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr></table>");
-    this.$header = $header = $("<div class='mp-header'><div class='mp-prev'></div><div class='mp-label mp-labelYear'></div><div class='mp-label mp-labelDate'></div><div class='mp-next'></div></div>");
+    this.$header = $header = $("<div class='mp-header'><div class='mp-prev-month'></div><div class='mp-next-month'></div></div><div class='mp-header'><div class='mp-prev'></div><div class='mp-label mp-labelYear'></div><div class='mp-label mp-labelDate'></div><div class='mp-next'></div></div>");
     this.$calendar = $calendar = $("<div class='mp-calendar'><div class='mp-slider'></div></div>");
     this.$slider = $calendar.children(".mp-slider");
     this.$labelYear = $header.children(".mp-labelYear");
