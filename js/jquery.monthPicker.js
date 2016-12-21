@@ -22,6 +22,8 @@ $.widget("nlte.monthPicker", {
     this.$labelDate = $header.children(".mp-labelDate");
     this.$prev = $header.children(".mp-prev");
     this.$next = $header.children(".mp-next");
+    this.$prev_month = $header.children(".mp-prev-month");
+    this.$next_month = $header.children(".mp-next-month");
 
     $(this.element).append($header);
     $("body").append($calendar);
@@ -44,6 +46,18 @@ $.widget("nlte.monthPicker", {
       },
       "click .mp-label": this.toggle
     });
+
+
+    this._on(false, $header, {
+      "click .mp-prev-month:not(.mp-disabled)": function () {
+          this._setYear(this.visibleYear - 1);
+      },
+      "click .mp-next-month:not(.mp-disabled)": function () {
+          this._setYear(this.visibleYear + 1);          
+      },
+      "click .mp-label": this.toggle
+    });
+
 
     $("html").on("click", function () {
       if (self.isOpen) self.close();
@@ -74,8 +88,10 @@ $.widget("nlte.monthPicker", {
 
     // TODO: if no selectedDate and nowYear is out of bounds, visibleYear could be the year closest to nowYear
     this.visibleYear = (this.selectedDate.full === null ? this.nowYear : this.selectedDate.year);
+    this.visibleMonth = (this.selectedDate.full === null ? this.nowMonth : this.selectedDate.month);
 
     this.$slider.empty().append(this._makeMonthTable(this.visibleYear)); // Redraw
+    this.$slider.empty().append(this._makeMonthTable(this.visibleMonth)); // Redraw
 
     this.windowWidth = this.$calendar.width();
     this.isOpen = this.option().isOpen;
@@ -304,6 +320,7 @@ $.widget("nlte.monthPicker", {
 
   _updateLabelYear: function () {
     var year = this.visibleYear;
+    var month = this.visibleMonth;
     this.$labelYear.html(year);
 
     // Enables/disables the prev/next controls
@@ -317,6 +334,20 @@ $.widget("nlte.monthPicker", {
       this.$next.addClass("mp-disabled");
     } else {
       this.$next.removeClass("mp-disabled");
+    }
+
+
+    // Enables/disables the prev-month/next-month controls
+    if (this._isMonthOutOfBounds(month - 1)) {
+      this.$prev_month.addClass("mp-disabled");
+    } else {
+      this.$prev_month.removeClass("mp-disabled");
+    }
+
+    if (this._isMonthOutOfBounds(month + 1)) {
+      this.$next_month.addClass("mp-disabled");
+    } else {
+      this.$next_month.removeClass("mp-disabled");
     }
   },
 
@@ -390,10 +421,15 @@ $.widget("nlte.monthPicker", {
     if (typeof year !== "number") {
       return;
     }
-
     return (year < (this.minDate.year || undefined) || year > this.maxDate.year || undefined) || false;
   },
 
+  _isMonthOutOfBounds: function (month) {
+    if (typeof month !== "number") {
+      return;
+    }
+    return (month < (this.minDate.month || undefined) || month > this.maxDate.month || undefined) || false;
+  },
 
   _thisQuarter: function (date) { // Returns the date of the first month (1, 4, 7, 10) of the quarter to which the given date belongs.
     if (date.full === null) {
