@@ -6,7 +6,7 @@ $.widget("nlte.monthPicker", {
     minDate: null, // Min date ("yyyy-mm")
     maxDate: null, // Max date ("yyyy-mm")
     selectedDate: null, // Initially selected date ("yyyy-mm")
-    isOpen: false, // Is the widget initially open?
+    _monthisOpen: false, // Is the widget initially open?
     selectBy: "month", // "month", "quarter"
     select: function () {}
   },
@@ -15,7 +15,7 @@ $.widget("nlte.monthPicker", {
     var self = this;
     var $header, $calendar;
     this.$month = $("<table class='mp-month'><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr></table>");
-    this.$header = $header = $("<div class='mp-header'><div class='mp-prev-month'></div><div class='mp-next-month'></div></div><div class='mp-header'><div class='mp-prev'></div><div class='mp-label mp-labelYear'></div><div class='mp-label mp-labelDate'></div><div class='mp-next'></div></div>");
+    this.$header = $header = $("<div class='mp-header'><div class='mp-prev'></div><div class='mp-label mp-labelYear'></div><div class='mp-label mp-labelDate'></div><div class='mp-next'></div></div><div class='mp-header'><div class='mp-prev-month'></div><div class='mp-next-month'></div></div>");
     this.$calendar = $calendar = $("<div class='mp-calendar'><div class='mp-slider'></div></div>");
     this.$slider = $calendar.children(".mp-slider");
     this.$labelYear = $header.children(".mp-labelYear");
@@ -44,16 +44,20 @@ $.widget("nlte.monthPicker", {
       "click .mp-next:not(.mp-disabled)": function () {
           this._setYear(this.visibleYear + 1);          
       },
-      "click .mp-label": this.toggle
-    });
-
-
-    this._on(false, $header, {
       "click .mp-prev-month:not(.mp-disabled)": function () {
-          this._setYear(this.visibleYear - 1);
+          if( this.visibleMonth === 0) 
+            sum = -1;
+          else
+            sum = 0;
+          
+          this._setMonth(this.visibleMonth - 1, this.visibleYear+sum);
       },
       "click .mp-next-month:not(.mp-disabled)": function () {
-          this._setYear(this.visibleYear + 1);          
+          if( this.visibleMonth === 11)
+            sum = 1
+          else
+            sum = 0;
+          this._setMonth(this.visibleMonth + 1, this.visibleYear+sum);          
       },
       "click .mp-label": this.toggle
     });
@@ -79,6 +83,7 @@ $.widget("nlte.monthPicker", {
 
 
     this.nowYear = new Date().getFullYear();
+    this.nowMonth = new Date().getMonth();
     this._setMinMaxDate(this._YM(this.option().minDate), this._YM(this.option().maxDate));
     this.selectedDate = this._validateSelectedDate(this._YM(this.option().selectedDate));
 
@@ -91,7 +96,7 @@ $.widget("nlte.monthPicker", {
     this.visibleMonth = (this.selectedDate.full === null ? this.nowMonth : this.selectedDate.month);
 
     this.$slider.empty().append(this._makeMonthTable(this.visibleYear)); // Redraw
-    this.$slider.empty().append(this._makeMonthTable(this.visibleMonth)); // Redraw
+    //this.$slider.empty().append(this._makeMonthTable(this.visibleMonth)); // Redrawi only if you change from JAN DEZ or DEZ JAN
 
     this.windowWidth = this.$calendar.width();
     this.isOpen = this.option().isOpen;
@@ -172,6 +177,7 @@ $.widget("nlte.monthPicker", {
 
   _makeMonthTable: function (year) {
     var self = this;
+    //var $t = this.$month.clone(true);
     var $t = this.$month.clone(true);
     var monthShortNames = this.option().monthShortNames;
 
@@ -198,6 +204,37 @@ $.widget("nlte.monthPicker", {
     return $t;
   },
 
+  _makeMonthTableForMonth: function (month,year) {
+    var self = this;
+    var $t = this.$month.clone(true);
+    var monthShortNames = this.option().monthShortNames;
+
+    $t.find("td").each(function (i) {
+      var $this = $(this);
+      var date = self._YM2(year, i + 1);
+      $this.data("date", date);
+      $this.html(monthShortNames[date.month]);
+    });
+
+    self.selectedDate.month = month;
+    $t.find(this.isQuarterMode ? "tr" : "td").each(function (i) {
+      var $this = $(this);
+      var date = (self.isQuarterMode ? $this.find("td").eq(0).data("date") : $this.data("date"));
+      //console.log(self.selectedDate);
+      //console.log(date);
+      if (self._isEqual(date, self.selectedDate )) {
+        $this.addClass("mp-selected");
+        console.log(self.selectedDate);
+      }
+
+      if (self._isOutOfBounds(date)) {
+        $this.addClass("mp-disabled");
+      }
+      //console.log($this);
+    });
+   // console.log($t);
+    return $t;
+  },
 
   _positionCalendar: function () {
     this.elemX = this.$header.offset().left;
@@ -205,7 +242,7 @@ $.widget("nlte.monthPicker", {
     this.elemWidth = this.$header.outerWidth();
     this.elemHeight = this.$header.outerHeight();
     // this.$calendar.css({ top: (this.elemY + this.elemHeight) + "px", left: (this.elemX) + "px" }); // Positions the widget under the element
-    this.$calendar.css({ top: (this.elemHeight) + "px", left: (this.elemX) + "px" }); // Positions the widget under the element
+    this.$calendar.css({ top: (this.elemHeight+43) + "px", left: (this.elemX) + "px" }); // Positions the widget under the element
   },
 
 
@@ -259,6 +296,26 @@ $.widget("nlte.monthPicker", {
   },
 
 
+  _setMonth: function (month, year, noAnim) {
+    if (!noAnim) {
+      this.open();
+    }
+
+    if (month === null || this._isYearOutOfBounds(year)) {
+      month = this.nowMonth;
+    }
+    //this.selectedDate.month = month;
+    this.visibleYear = year;
+    this.visibleMonth = month;
+    //console.log(this._makeMonthTableForMonth(month, year));
+    //this.$slider.empty().append(this._makeMonthTableForMonth(month, year)); // Redraw
+    //this.$slider.empty(); // Redraw
+    this._slideMonth(this.visibleMonth, month, this.visibleYear, year, noAnim);
+    this._updateLabelYear();
+    this._updateLabelDate();
+    this._displayLabel();
+  },
+
   _slide: function (fromYear, toYear, noAnim) {
     var $slider = this.$slider;
     fromYear = parseInt(fromYear);
@@ -304,6 +361,52 @@ $.widget("nlte.monthPicker", {
     }
   },
 
+  _slideMonth: function (fromMonth, toMonth, fromYear, toYear, noAnim) {
+    var $slider = this.$slider;
+    fromYear = parseInt(fromYear);
+    toYear = parseInt(toYear);
+
+    if ($slider.is(":animated") || isNaN(fromYear) || isNaN(toYear)) {
+      return;
+    }
+
+    if (fromYear === toYear || !!noAnim) { // Same year: redraw calendar and exit
+      //console.log(toMonth);
+      //console.log(this._makeMonthTableForMonth(toMonth,toYear));
+      this.$slider.empty().append(this._makeMonthTableForMonth(toMonth,toYear));
+      return;
+    }
+
+    var diffYear = toYear - fromYear;
+    var absDiffYear = Math.abs(diffYear);
+    var sign = diffYear / absDiffYear;
+    var width = (absDiffYear + 1) * this.windowWidth;
+    var duration = absDiffYear * this.windowWidth;
+
+    var use = [
+      { action: "prepend", cssAlign: { left: "auto", right: 0 } },
+      null,
+      { action: "append", cssAlign: { left: 0, right: "auto" } }
+    ];
+
+    for (var i = 1; i <= Math.abs(diffYear); i++) {
+      var year = fromYear + sign * i;
+      $slider[use[sign + 1].action](this._makeMonthTable(year));
+    }
+
+    $slider.css(use[sign + 1].cssAlign);
+    $slider.css({ width: width + "px" });
+
+    if (sign === -1) {
+      $slider.animate({ right: (-width + this.windowWidth) + "px" }, duration, function () {
+        $slider.css({ left: "auto", right: "auto" }).children(".mp-month").not(":first").remove();
+      });
+    } else if (sign === 1) {
+      $slider.animate({ left: (-width + this.windowWidth) + "px" }, duration, function () {
+        $slider.css({ left: "auto", right: "auto" }).children(".mp-month").not(":last").remove();
+      });
+    }
+  },
   _updateLabelDate: function () {
     var d = this.selectedDate;
 
@@ -325,30 +428,21 @@ $.widget("nlte.monthPicker", {
 
     // Enables/disables the prev/next controls
     if (this._isYearOutOfBounds(year - 1)) {
-      this.$prev.addClass("mp-disabled");
+      this.$prev_month.addClass("mp-disabled");
     } else {
       this.$prev.removeClass("mp-disabled");
+      this.$prev_month.removeClass("mp-disabled");
     }
 
     if (this._isYearOutOfBounds(year + 1)) {
       this.$next.addClass("mp-disabled");
-    } else {
-      this.$next.removeClass("mp-disabled");
-    }
-
-
-    // Enables/disables the prev-month/next-month controls
-    if (this._isMonthOutOfBounds(month - 1)) {
-      this.$prev_month.addClass("mp-disabled");
-    } else {
-      this.$prev_month.removeClass("mp-disabled");
-    }
-
-    if (this._isMonthOutOfBounds(month + 1)) {
       this.$next_month.addClass("mp-disabled");
     } else {
+      this.$next.removeClass("mp-disabled");
       this.$next_month.removeClass("mp-disabled");
     }
+
+
   },
 
 
@@ -422,13 +516,6 @@ $.widget("nlte.monthPicker", {
       return;
     }
     return (year < (this.minDate.year || undefined) || year > this.maxDate.year || undefined) || false;
-  },
-
-  _isMonthOutOfBounds: function (month) {
-    if (typeof month !== "number") {
-      return;
-    }
-    return (month < (this.minDate.month || undefined) || month > this.maxDate.month || undefined) || false;
   },
 
   _thisQuarter: function (date) { // Returns the date of the first month (1, 4, 7, 10) of the quarter to which the given date belongs.

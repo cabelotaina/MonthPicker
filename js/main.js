@@ -5,7 +5,7 @@ $(function () {
     maxDate: "2016-01",
     selectedDate: "2015-08",
     // isOpen: true,
-    selectBy: "quarter",
+    selectBy: "month",
     select: updateSelectedMonth // Callback on select
   });
 
